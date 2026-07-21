@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
@@ -71,11 +71,35 @@ describe('application navigation', () => {
       expect(document.body.textContent).not.toMatch(/challenge pool|bundled curriculum|local-first|telemetry/i)
     }
   })
+
+  it('offers a scored keyboard-first Warm-up and retains its Personal Bests', async () => {
+    window.location.hash = '#/warm-ups/run'
+    render(<App />)
+
+    const start = screen.getByRole('button', { name: /start warm-up/i })
+    expect(document.activeElement).toBe(start)
+    await userEvent.click(start)
+
+    const typingSurface = screen.getByRole('textbox', { name: /warm-up typing area/i })
+    const prompt = screen.getByLabelText('Warm-up prompt').textContent!
+    for (const character of prompt) {
+      fireEvent.keyDown(typingSurface, { key: character === '\n' ? 'Enter' : character })
+    }
+
+    expect(screen.getByRole('heading', { name: /warm-up complete/i })).toBeTruthy()
+    expect(screen.getByText('Words per minute')).toBeTruthy()
+    expect(screen.getByText('Character accuracy')).toBeTruthy()
+    const progress = createStoredProgress()
+    expect(progress.warmupBestWpm?.value).toBeGreaterThan(0)
+    expect(progress.warmupBestAccuracy?.value).toBe(100)
+  })
 })
 
 function createStoredProgress() {
-  return JSON.parse(window.localStorage.getItem('terminal-typing:progress:v2') ?? '{}') as {
+  return JSON.parse(window.localStorage.getItem('terminal-typing:progress:v3') ?? '{}') as {
     completedChallenges: string[]
     completedLessons: string[]
+    warmupBestWpm?: { value: number }
+    warmupBestAccuracy?: { value: number }
   }
 }

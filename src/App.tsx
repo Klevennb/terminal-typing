@@ -12,6 +12,7 @@ import {
   LessonRunPage,
   NotFoundPage,
 } from './pages'
+import { WarmupRunPage, WarmupsPage } from './warmup/WarmupPages'
 
 const titles: Record<Route['page'], string> = {
   landing: 'Terminal Typing',
@@ -20,6 +21,8 @@ const titles: Record<Route['page'], string> = {
   'lesson-run': 'Lesson Run · Terminal Typing',
   challenges: 'Challenges · Terminal Typing',
   challenge: 'Challenge · Terminal Typing',
+  'warm-ups': 'Warm-ups · Terminal Typing',
+  'warm-up-run': 'Warm-up · Terminal Typing',
   'not-found': 'Not found · Terminal Typing',
 }
 
@@ -39,6 +42,8 @@ function Page({ route }: { route: Route }) {
     const challenge = findChallenge(route.challengeId)
     return challenge ? <ChallengePage key={challenge.id} challenge={challenge} /> : <NotFoundPage />
   }
+  if (route.page === 'warm-ups') return <WarmupsPage />
+  if (route.page === 'warm-up-run') return <WarmupRunPage />
   return <NotFoundPage />
 }
 
@@ -48,7 +53,7 @@ function App() {
 
   useEffect(() => {
     document.title = titles[route.page]
-    content.current?.focus()
+    if (route.page !== 'warm-up-run') content.current?.focus()
   }, [route])
 
   return (
@@ -60,6 +65,7 @@ function App() {
         <nav aria-label="Primary navigation">
           <a href={href({ page: 'lessons' })}>Lessons</a>
           <a href={href({ page: 'challenges' })}>Challenges</a>
+          <a href={href({ page: 'warm-ups' })}>Warm-ups</a>
         </nav>
       </header>
       <main ref={content} tabIndex={-1}>

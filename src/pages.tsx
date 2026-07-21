@@ -29,6 +29,7 @@ export function LandingPage() {
         <div className="hero-actions">
           <a className="button primary" href={href({ page: 'lessons' })}>Browse lessons</a>
           <a className="button secondary" href={href({ page: 'challenges' })}>Choose a challenge</a>
+          <a className="button secondary" href={href({ page: 'warm-ups' })}>Try a warm-up</a>
         </div>
       </section>
       <section className="feature-grid" aria-label="How practice works">

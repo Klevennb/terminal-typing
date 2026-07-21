@@ -41,4 +41,30 @@ describe('learning progress', () => {
       completedLessons: ['lesson-one'],
     })
   })
+
+  it('migrates current completions into the Warm-up capable record', () => {
+    const storage = memoryStorage({
+      'terminal-typing:progress:v2': JSON.stringify({
+        completedChallenges: ['challenge-one'],
+        completedLessons: ['lesson-one'],
+      }),
+    })
+
+    expect(createProgressStore(storage).load()).toMatchObject({
+      completedChallenges: ['challenge-one'],
+      completedLessons: ['lesson-one'],
+    })
+  })
+
+  it('retains independent Warm-up Personal Bests only from unassisted Attempts', () => {
+    const store = createProgressStore(memoryStorage())
+    store.recordWarmup({ wpm: 40, accuracy: 95, assisted: false }, 12, '2026-07-21T12:00:00.000Z')
+    store.recordWarmup({ wpm: 38, accuracy: 98, assisted: false }, 13, '2026-07-21T12:01:00.000Z')
+    store.recordWarmup({ wpm: 90, accuracy: 100, assisted: true }, 14, '2026-07-21T12:02:00.000Z')
+
+    expect(store.load()).toMatchObject({
+      warmupBestWpm: { value: 40, seed: 12 },
+      warmupBestAccuracy: { value: 98, seed: 13 },
+    })
+  })
 })

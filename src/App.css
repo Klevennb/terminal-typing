@@ -33,4 +33,20 @@ main:focus { outline: 0; }
 .terminal-transcript { min-height: 280px; padding: 1.4rem 1.5rem 0; white-space: pre-wrap; }.terminal-line.coaching { margin: .6rem 0; padding: .55rem .75rem; color: #f1d7a0; border-left: 2px solid #e3aa49; background: #312a1c; }.terminal-surface form { display: flex; align-items: center; padding: 0 1.5rem 1.5rem; }.prompt { flex: none; margin-right: .65rem; color: var(--green); }.terminal-surface input { width: 100%; padding: .3rem 0; color: inherit; caret-color: var(--green); background: transparent; border: 0; outline: 0; font: inherit; }.terminal-surface:focus-within { box-shadow: 0 0 0 3px #6d9c3c, 0 25px 60px #24251c2e; }
 .completion-panel { max-width: 800px; margin: 0 auto; padding: 1.3rem 1.5rem; border-left: 4px solid #6b9d30; background: #e2f3cd; }.completion-panel > div { margin-top: 1rem; }.summary-page > .completion-panel { margin: 2rem 0 0; }.not-found p:not(.eyebrow), .summary-page > p:not(.eyebrow) { color: var(--muted); font-size: 1.1rem; }.not-found .button { margin-top: 1.5rem; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.warmup-page { min-height: 75vh; padding: clamp(2rem, 6vw, 5rem) clamp(1.2rem, 8vw, 9rem); }
+.warmup-page h1 { margin: 0 0 2rem; font-size: clamp(2.8rem, 6vw, 5.5rem); letter-spacing: -.06em; }
+.warmup-prompt { max-width: 980px; min-height: 11rem; margin: 2rem 0; padding: 1.8rem; white-space: pre-wrap; color: #77776f; background: var(--surface); border: 1px solid var(--line); font: 1.2rem/1.8 var(--mono); }
+.warmup-prompt .correct { color: var(--ink); }
+.warmup-prompt .incorrect { color: #8d1d14; background: #ffd8d1; text-decoration: underline wavy currentColor 2px; }
+.warmup-prompt .current { color: var(--ink); background: var(--green); outline: 2px solid var(--ink); }
+.warmup-typing { max-width: 980px; padding: 1rem 1.2rem; color: var(--muted); border: 2px solid var(--ink); background: white; cursor: text; }
+.warmup-typing:focus { outline: 4px solid #6d9c3c; outline-offset: 3px; }
+.warmup-typing.paused { border-style: dashed; }
+.warmup-results { max-width: 760px; display: flex; flex-wrap: wrap; gap: 1rem; }
+.warmup-results > div:not(.hero-actions), .personal-bests p { min-width: 220px; padding: 1.4rem; background: var(--surface); border: 1px solid var(--line); }
+.warmup-results strong, .personal-bests strong { display: block; font-size: 2.3rem; }
+.warmup-results span, .personal-bests span { display: block; color: var(--muted); }
+.assist-message { flex-basis: 100%; padding: 1rem; border-left: 3px solid #b7791f; background: #fff0cf; }
+.personal-bests { margin-top: 4rem; }
+.personal-bests > div { display: flex; flex-wrap: wrap; gap: 1rem; }
 @media (max-width: 800px) { .site-header nav { order: 3; grid-column: 1 / -1; justify-content: center; padding-top: 1rem; }.feature-grid, .card-grid, .practice { grid-template-columns: 1fr; }.feature-grid article, .feature-grid article:first-child { border: 0; border-bottom: 1px solid var(--line); }.challenge-list a { grid-template-columns: 2.3rem 1fr auto; }.challenge-list .progress-mark { display: none; }.terminal-surface { min-height: 340px; }.terminal-transcript { min-height: 230px; } }

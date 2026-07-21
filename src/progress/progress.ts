@@ -7,9 +7,18 @@ export interface KeyValueStorage {
 export interface LearningProgress {
   completedChallenges: string[]
   completedLessons: string[]
+  warmupBestWpm?: WarmupPersonalBest
+  warmupBestAccuracy?: WarmupPersonalBest
 }
 
-const currentKey = 'terminal-typing:progress:v2'
+export interface WarmupPersonalBest {
+  value: number
+  seed: number
+  completedAt: string
+}
+
+const currentKey = 'terminal-typing:progress:v3'
+const previousKey = 'terminal-typing:progress:v2'
 const legacyKey = 'terminal-typing:progress:v1'
 const emptyProgress = (): LearningProgress => ({
   completedChallenges: [],
@@ -18,6 +27,14 @@ const emptyProgress = (): LearningProgress => ({
 
 function stringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+function personalBest(value: unknown): value is WarmupPersonalBest {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<WarmupPersonalBest>
+  return typeof candidate.value === 'number' && Number.isFinite(candidate.value)
+    && typeof candidate.seed === 'number' && Number.isFinite(candidate.seed)
+    && typeof candidate.completedAt === 'string'
 }
 
 function parseCurrent(value: string | null): LearningProgress | undefined {
@@ -29,6 +46,8 @@ function parseCurrent(value: string | null): LearningProgress | undefined {
   return {
     completedChallenges: [...new Set(candidate.completedChallenges)],
     completedLessons: [...new Set(candidate.completedLessons)],
+    ...(personalBest(candidate.warmupBestWpm) && { warmupBestWpm: candidate.warmupBestWpm }),
+    ...(personalBest(candidate.warmupBestAccuracy) && { warmupBestAccuracy: candidate.warmupBestAccuracy }),
   }
 }
 
@@ -56,6 +75,16 @@ export function createProgressStore(storage: KeyValueStorage) {
       return emptyProgress()
     }
     try {
+      const previous = parseCurrent(storage.getItem(previousKey))
+      if (previous) {
+        save(previous)
+        return previous
+      }
+    } catch {
+      storage.removeItem(previousKey)
+      return emptyProgress()
+    }
+    try {
       const migrated = parseLegacy(storage.getItem(legacyKey))
       if (migrated) {
         save(migrated)
@@ -67,7 +96,7 @@ export function createProgressStore(storage: KeyValueStorage) {
     return emptyProgress()
   }
 
-  function add(kind: keyof LearningProgress, id: string): LearningProgress {
+  function add(kind: 'completedChallenges' | 'completedLessons', id: string): LearningProgress {
     const current = load()
     const next = { ...current, [kind]: [...new Set([...current[kind], id])] }
     save(next)
@@ -78,5 +107,22 @@ export function createProgressStore(storage: KeyValueStorage) {
     load,
     completeChallenge: (id: string) => add('completedChallenges', id),
     completeLesson: (id: string) => add('completedLessons', id),
+    recordWarmup(
+      result: { wpm: number; accuracy: number; assisted: boolean },
+      seed: number,
+      completedAt: string,
+    ) {
+      const current = load()
+      if (result.assisted) return current
+      const next: LearningProgress = { ...current }
+      if (!current.warmupBestWpm || result.wpm > current.warmupBestWpm.value) {
+        next.warmupBestWpm = { value: result.wpm, seed, completedAt }
+      }
+      if (!current.warmupBestAccuracy || result.accuracy > current.warmupBestAccuracy.value) {
+        next.warmupBestAccuracy = { value: result.accuracy, seed, completedAt }
+      }
+      save(next)
+      return next
+    },
   }
 }

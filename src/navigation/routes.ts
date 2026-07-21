@@ -5,6 +5,8 @@ export type Route =
   | { page: 'lesson-run'; lessonId: string }
   | { page: 'challenges' }
   | { page: 'challenge'; challengeId: string }
+  | { page: 'warm-ups' }
+  | { page: 'warm-up-run' }
   | { page: 'not-found' }
 
 export function parseRoute(hash: string): Route {
@@ -22,6 +24,10 @@ export function parseRoute(hash: string): Route {
   if (parts.length === 2 && parts[0] === 'challenges') {
     return { page: 'challenge', challengeId: parts[1] }
   }
+  if (parts.length === 1 && parts[0] === 'warm-ups') return { page: 'warm-ups' }
+  if (parts.length === 2 && parts[0] === 'warm-ups' && parts[1] === 'run') {
+    return { page: 'warm-up-run' }
+  }
   return { page: 'not-found' }
 }
 
@@ -33,5 +39,7 @@ export function href(route: Exclude<Route, { page: 'not-found' }>): string {
     case 'lesson-run': return `#/lessons/${encodeURIComponent(route.lessonId)}/run`
     case 'challenges': return '#/challenges'
     case 'challenge': return `#/challenges/${encodeURIComponent(route.challengeId)}`
+    case 'warm-ups': return '#/warm-ups'
+    case 'warm-up-run': return '#/warm-ups/run'
   }
 }

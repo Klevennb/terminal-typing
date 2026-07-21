@@ -9,6 +9,8 @@ describe('hash routes', () => {
     ['#/lessons/bash-first-steps/run', { page: 'lesson-run', lessonId: 'bash-first-steps' }],
     ['#/challenges', { page: 'challenges' }],
     ['#/challenges/bash-read-file', { page: 'challenge', challengeId: 'bash-read-file' }],
+    ['#/warm-ups', { page: 'warm-ups' }],
+    ['#/warm-ups/run', { page: 'warm-up-run' }],
   ])('parses %s', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected)
   })
