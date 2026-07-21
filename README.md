@@ -1,5 +1,7 @@
 # terminal-typing
 
+https://terminal-typing.pages.dev/
+
 A browser-based practice environment for learning shell commands and keyboard workflows.
 
 terminal-typing includes focused lessons and individual challenges for PowerShell, Bash, and Zsh. Commands run against authored scenarios and isolated in-memory workspaces, so the application never executes commands or accesses the learner's real filesystem.
