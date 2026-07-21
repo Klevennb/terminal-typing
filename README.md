@@ -1,6 +1,24 @@
-# React + TypeScript + Vite
+# terminal-typing
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A static, local-first practice environment for shell commands and keyboard workflows.
+
+The app uses authored Scenarios, isolated in-memory Virtual Workspaces, and a purpose-built semantic Terminal surface. It never executes commands or accesses the learner's real filesystem. Curriculum is bundled in the client, Learning Progress stays in browser storage, and the application sends no learner telemetry.
+
+The terminal-free landing page links to lesson and challenge catalogs. Lessons create a fresh randomized Lesson Run, while the challenge catalog allows a learner to practice one specific command. Hash-based routes keep every page directly addressable on static hosting.
+
+## Development
+
+```sh
+npm install
+npm run dev
+npm test
+npm run lint
+npm run build
+```
+
+Architecture decisions are recorded in [`docs/adr`](docs/adr).
+
+<!-- Original Vite template notes retained below for toolchain reference. -->
 
 Currently, two official plugins are available:
 
