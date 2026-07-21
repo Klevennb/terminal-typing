@@ -1,0 +1,3 @@
+# Isolate a purpose-built terminal surface
+
+The initial terminal UI will be a purpose-built semantic React component rather than a full terminal-emulator library, because the product models authored scenarios rather than a complete terminal and requires accessible, deterministic keyboard interaction. Its contract is limited to a terminal view model, normalized keyboard input, focus behavior, and accessibility metadata; lesson selection, scenario transitions, scoring, persistence, and coaching remain outside the surface. This boundary allows the renderer to be replaced without rewiring the learning or simulation behavior.
