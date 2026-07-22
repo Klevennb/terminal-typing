@@ -13,6 +13,9 @@ export function TerminalSurface({ shell, bindingProfile, lines, input, cursor = 
   const field = useRef<HTMLInputElement>(null)
   const name = shellNames[shell]
   const prompt = shell === 'powershell' ? 'PS /work>' : 'learner@practice:/work$'
+  const beforeCursor = input.slice(0, cursor)
+  const cursorCharacter = input[cursor] ?? '\u00a0'
+  const afterCursor = input.slice(cursor + (cursor < input.length ? 1 : 0))
   useEffect(() => { field.current?.setSelectionRange(cursor, cursor) }, [cursor, input])
 
   function keyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -30,7 +33,10 @@ export function TerminalSurface({ shell, bindingProfile, lines, input, cursor = 
     <div className="terminal-transcript" role="log" aria-live="polite">{lines.map((line, index) => <div className={`terminal-line ${line.kind}`} key={`${index}-${line.text}`}>{line.kind === 'input' && <span aria-hidden="true">{prompt} </span>}{line.text}</div>)}</div>
     <form onSubmit={(event) => { event.preventDefault(); if (!onAction && input.trim()) onSubmit?.(input) }}>
       <label htmlFor="shell-input" className="visually-hidden">{name} input buffer</label><span className="prompt" aria-hidden="true">{prompt}</span>
-      <input ref={field} id="shell-input" autoFocus autoComplete="off" spellCheck={false} value={input} onChange={(event) => onInputChange?.(event.target.value)} onKeyDown={keyDown} />
+      <span className="terminal-input-buffer">
+        <span className="terminal-input-visual" aria-hidden="true">{beforeCursor}<span className="terminal-block-cursor">{cursorCharacter}</span>{afterCursor}</span>
+        <input ref={field} id="shell-input" autoFocus autoComplete="off" spellCheck={false} value={input} onChange={(event) => onInputChange?.(event.target.value)} onKeyDown={keyDown} />
+      </span>
     </form>
   </section>
 }

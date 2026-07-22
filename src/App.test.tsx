@@ -46,6 +46,15 @@ describe('application navigation', () => {
     expect(createStoredProgress().completedChallenges).toContain('bash-efficiency-execute')
   })
 
+  it('focuses the input buffer when an efficiency challenge opens', () => {
+    window.location.hash = '#/challenges/bash-efficiency-navigate'
+    render(<App />)
+
+    const input = screen.getByLabelText('Bash input buffer')
+    expect(document.activeElement).toBe(input)
+    expect(document.querySelector('.terminal-block-cursor')?.textContent).toBe('p')
+  })
+
   it('recovers from an unknown curriculum destination', () => {
     window.location.hash = '#/lessons/not-a-lesson'
     render(<App />)

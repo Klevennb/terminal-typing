@@ -53,7 +53,9 @@ function App() {
 
   useEffect(() => {
     document.title = titles[route.page]
-    if (route.page !== 'warm-up-run') content.current?.focus()
+    if (route.page !== 'warm-up-run' && route.page !== 'challenge' && route.page !== 'lesson-run') {
+      content.current?.focus()
+    }
   }, [route])
 
   return (
