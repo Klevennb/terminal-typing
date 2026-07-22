@@ -33,6 +33,19 @@ describe('application navigation', () => {
     expect(createStoredProgress().completedChallenges).toContain('bash-print-location')
   })
 
+  it('completes an efficiency challenge with keyboard actions and reports efficiency', async () => {
+    window.location.hash = '#/challenges/bash-efficiency-execute'
+    render(<App />)
+
+    expect(screen.getByText('Recommended actions')).toBeTruthy()
+    await userEvent.type(screen.getByLabelText('Bash input buffer'), '{Enter}')
+
+    expect(screen.getByText(/challenge complete/i)).toBeTruthy()
+    expect(screen.getByText('Incorrect actions').nextElementSibling?.textContent).toBe('0')
+    expect(screen.getByText('Excess actions').nextElementSibling?.textContent).toBe('0')
+    expect(createStoredProgress().completedChallenges).toContain('bash-efficiency-execute')
+  })
+
   it('recovers from an unknown curriculum destination', () => {
     window.location.hash = '#/lessons/not-a-lesson'
     render(<App />)

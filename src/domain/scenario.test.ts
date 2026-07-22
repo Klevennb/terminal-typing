@@ -15,6 +15,32 @@ const scenario: Scenario = {
 }
 
 describe('scenario session', () => {
+  it('completes an efficiency scenario by navigating the owned input buffer', () => {
+    const session = createScenarioSession({ ...scenario, initialInput: 'Get-ChildItem', initialCursor: 0, recommendedActions: [
+      { action: 'move-end', binding: 'End', name: 'Move to end' },
+      { action: 'submit', binding: 'Enter', name: 'Execute command' },
+    ] })
+
+    expect(session.dispatch({ type: 'move-end' }).cursor).toBe(13)
+    const result = session.dispatch({ type: 'submit' })
+
+    expect(result.status).toBe('completed')
+    expect(result.efficiency).toEqual({ incorrectActions: 0, excessActions: 0 })
+  })
+
+  it('counts alternate valid and unsupported actions without letting unsupported input mutate the buffer', () => {
+    const session = createScenarioSession({ ...scenario, initialInput: 'Get-ChildItem', recommendedActions: [
+      { action: 'submit', binding: 'Enter', name: 'Execute command' },
+    ] })
+    const before = session.getState()
+    const unsupported = session.dispatch({ type: 'unsupported', binding: 'Ctrl+X' })
+    expect(unsupported.input).toBe(before.input)
+    session.dispatch({ type: 'move-start' })
+    session.dispatch({ type: 'move-end' })
+    const result = session.dispatch({ type: 'submit' })
+    expect(result.efficiency).toEqual({ incorrectActions: 1, excessActions: 2 })
+  })
+
   it('completes a scenario through its supported command without touching a real filesystem', () => {
     const session = createScenarioSession(scenario)
 

@@ -48,7 +48,7 @@ export function LessonCatalogPage() {
       <div className="card-grid">
         {curriculum.map((lesson) => (
           <a className="catalog-card" href={href({ page: 'lesson', lessonId: lesson.id })} key={lesson.id}>
-            <div><span className="shell-tag">{shellName(lesson.shell)}</span><ProgressMark complete={progress.completedLessons.includes(lesson.id)} /></div>
+            <div><span className="shell-tag">{shellName(lesson.shell)} · {lesson.kind === 'efficiency' ? 'Efficiency' : 'Command'}</span><ProgressMark complete={progress.completedLessons.includes(lesson.id)} /></div>
             <h2>{lesson.title}</h2><p>{lesson.description}</p>
             <strong>{lesson.challengePool.length} challenges <span aria-hidden="true">→</span></strong>
           </a>
@@ -92,7 +92,7 @@ export function LessonDetailPage({ lesson }: { lesson: Lesson }) {
   return (
     <section className="detail-page" aria-labelledby="lesson-title">
       <a className="back-link" href={href({ page: 'lessons' })}>← All lessons</a>
-      <p className="eyebrow">{shellName(lesson.shell)} · Command lesson</p>
+      <p className="eyebrow">{shellName(lesson.shell)} · {lesson.kind === 'efficiency' ? 'Efficiency lesson' : 'Command lesson'}</p>
       <h1 id="lesson-title">{lesson.title}</h1><p className="lede">{lesson.description}</p>
       <a className="button primary" href={href({ page: 'lesson-run', lessonId: lesson.id })}>Start lesson</a>
       <div className="lesson-outline"><h2>In this lesson</h2>
@@ -102,25 +102,25 @@ export function LessonDetailPage({ lesson }: { lesson: Lesson }) {
   )
 }
 
-function Practice({ challenge, onComplete, attempt }: { challenge: Challenge; onComplete(): void; attempt: number }) {
+function Practice({ challenge, onComplete, attempt }: { challenge: Challenge; onComplete(metrics: ScenarioState['efficiency']): void; attempt: number }) {
   const [session] = useState(() => createScenarioSession(challenge.scenario))
   const [state, setState] = useState<ScenarioState>(() => session.getState())
-  const [input, setInput] = useState('')
   const [bindingMessage, setBindingMessage] = useState('')
+  const efficiency = Boolean(challenge.scenario.recommendedActions)
 
-  function submit(command: string) {
-    const next = session.dispatch({ type: 'submit', input: command })
-    setState(next); setInput(''); setBindingMessage('')
-    if (next.status === 'completed') onComplete()
+  function act(action: Parameters<typeof session.dispatch>[0]) {
+    const next = session.dispatch(action)
+    setState(next)
+    if (next.status === 'completed') onComplete(next.efficiency)
   }
 
   return (
     <div className="practice" data-attempt={attempt}>
       <div className="lesson-copy"><p className="eyebrow">{shellName(challenge.scenario.shell)} · Challenge</p><h1>{challenge.title}</h1><p>{challenge.description}</p>
-        <div className="challenge-card"><span>Recommended command</span><code>{challenge.scenario.goal.command}</code><p>Type the command, then press Enter.</p></div>
+        <div className="challenge-card">{efficiency ? <><span>Recommended actions</span><div>{challenge.scenario.recommendedActions!.map((item) => <p key={`${item.binding}-${item.name}`}><kbd>{item.binding}</kbd> {item.name}</p>)}</div></> : <><span>Recommended command</span><code>{challenge.scenario.goal.command}</code><p>Type the command, then press Enter.</p></>}</div>
         {bindingMessage && <p className="binding-message" role="status">{bindingMessage}</p>}
       </div>
-      <TerminalSurface shell={challenge.scenario.shell} bindingProfile={challenge.scenario.bindingProfile} lines={state.lines} input={input} onInputChange={setInput} onSubmit={submit} onBindingMessage={setBindingMessage} />
+      <TerminalSurface shell={challenge.scenario.shell} bindingProfile={challenge.scenario.bindingProfile} lines={state.lines} input={state.input} cursor={state.cursor} onAction={act} onBindingMessage={setBindingMessage} />
     </div>
   )
 }
@@ -128,9 +128,10 @@ function Practice({ challenge, onComplete, attempt }: { challenge: Challenge; on
 export function ChallengePage({ challenge }: { challenge: Challenge }) {
   const [complete, setComplete] = useState(false)
   const [attempt, setAttempt] = useState(0)
-  function completed() { store().completeChallenge(challenge.id); setComplete(true) }
+  const [metrics, setMetrics] = useState<ScenarioState['efficiency']>()
+  function completed(result: ScenarioState['efficiency']) { store().completeChallenge(challenge.id); setMetrics(result); setComplete(true) }
   function retry() { setComplete(false); setAttempt((value) => value + 1) }
-  return <section className="practice-page"><a className="back-link" href={href({ page: 'challenges' })}>← All challenges</a><Practice key={attempt} challenge={challenge} onComplete={completed} attempt={attempt} />{complete && <CompletionActions message="Challenge complete" primary="Retry challenge" onPrimary={retry} backHref={href({ page: 'challenges' })} backLabel="Back to challenges" />}</section>
+  return <section className="practice-page"><a className="back-link" href={href({ page: 'challenges' })}>← All challenges</a><Practice key={attempt} challenge={challenge} onComplete={completed} attempt={attempt} />{complete && <>{challenge.scenario.recommendedActions && metrics && <EfficiencyResults metrics={metrics} />}<CompletionActions message="Challenge complete" primary="Retry challenge" onPrimary={retry} backHref={href({ page: 'challenges' })} backLabel="Back to challenges" /></>}</section>
 }
 
 export function LessonRunPage({ lesson }: { lesson: Lesson }) {
@@ -138,15 +139,20 @@ export function LessonRunPage({ lesson }: { lesson: Lesson }) {
   const [challenge, setChallenge] = useState(() => run.currentChallenge())
   const [challengeComplete, setChallengeComplete] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [metrics, setMetrics] = useState<ScenarioState['efficiency']>()
   const position = run.position()
 
-  function completed() { if (challenge) store().completeChallenge(challenge.id); setChallengeComplete(true) }
+  function completed(result: ScenarioState['efficiency']) { if (challenge) store().completeChallenge(challenge.id); setMetrics(result); setChallengeComplete(true) }
   function next() { const upcoming = run.advance(); setChallenge(upcoming); setChallengeComplete(false); setAttempt((value) => value + 1); if (!upcoming) store().completeLesson(lesson.id) }
   function retry() { run.retry(); setChallengeComplete(false); setAttempt((value) => value + 1) }
   function practiceAgain() { const nextRun = createLessonRun(lesson); setRun(nextRun); setChallenge(nextRun.currentChallenge()); setChallengeComplete(false); setAttempt((value) => value + 1) }
 
   if (!challenge) return <section className="summary-page"><p className="eyebrow">Lesson complete</p><h1>{lesson.title}</h1><p>You completed all {position.total} challenges in this lesson.</p><CompletionActions message="All challenges complete" primary="Practice again" onPrimary={practiceAgain} backHref={href({ page: 'lesson', lessonId: lesson.id })} backLabel="Back to lesson" /></section>
-  return <section className="practice-page"><div className="run-bar"><a className="back-link" href={href({ page: 'lesson', lessonId: lesson.id })}>← Leave run</a><span>Challenge {position.current} of {position.total}</span></div><Practice key={`${challenge.id}-${attempt}`} challenge={challenge} onComplete={completed} attempt={attempt} />{challengeComplete && <CompletionActions message="Challenge complete" primary={position.current === position.total ? 'Finish lesson' : 'Next challenge'} onPrimary={next} secondary="Retry challenge" onSecondary={retry} />}</section>
+  return <section className="practice-page"><div className="run-bar"><a className="back-link" href={href({ page: 'lesson', lessonId: lesson.id })}>← Leave run</a><span>Challenge {position.current} of {position.total}</span></div><Practice key={`${challenge.id}-${attempt}`} challenge={challenge} onComplete={completed} attempt={attempt} />{challengeComplete && <>{lesson.kind === 'efficiency' && metrics && <EfficiencyResults metrics={metrics} />}<CompletionActions message="Challenge complete" primary={position.current === position.total ? 'Finish lesson' : 'Next challenge'} onPrimary={next} secondary="Retry challenge" onSecondary={retry} /></>}</section>
+}
+
+function EfficiencyResults({ metrics }: { metrics: ScenarioState['efficiency'] }) {
+  return <dl className="efficiency-results" aria-label="Efficiency results"><div><dt>Incorrect actions</dt><dd>{metrics.incorrectActions}</dd></div><div><dt>Excess actions</dt><dd>{metrics.excessActions}</dd></div></dl>
 }
 
 function CompletionActions({ message, primary, onPrimary, secondary, onSecondary, backHref, backLabel }: { message: string; primary: string; onPrimary(): void; secondary?: string; onSecondary?(): void; backHref?: string; backLabel?: string }) {
